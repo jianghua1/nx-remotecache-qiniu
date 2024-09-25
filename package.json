@@ -1,5 +1,5 @@
 {
-  "name": "nx-remotecache-qiniu",
+  "name": "nx-remotecache-qiniu-jianghua",
   "version": "2.0.0",
   "description": "Remote caching for @nrwl/nx using Qiniu Blob Storage",
   "keywords": [
@@ -13,10 +13,10 @@
     "kodo",
     "typescript"
   ],
-  "author": "toimc <admin@wayearn.com>",
+  "author": "jianghua <719584530@qq.com>",
   "repository": {
     "type": "git",
-    "url": "https://github.com/toimc/nx-remotecache-qiniu.git"
+    "url": "https://github.com/jianghua1/nx-remotecache-qiniu.git"
   },
   "packageManager": "pnpm@8.11.0",
   "license": "MIT",
