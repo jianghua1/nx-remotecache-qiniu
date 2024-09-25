@@ -1,6 +1,6 @@
 {
   "name": "nx-remotecache-qiniu-jianghua",
-  "version": "1.0.0",
+  "version": "2.0.1",
   "description": "Remote caching for @nrwl/nx using Qiniu Blob Storage",
   "keywords": [],
   "author": "jianghua <719584530@qq.com>",
