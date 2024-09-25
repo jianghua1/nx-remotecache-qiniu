@@ -98,122 +98,93 @@ async function getClient(options: QiniuBlobRunnerOptions) {
   }
 }
 
-const clientOptions = getOptions({
-  accessKey: '4rJWJuLtG6_zb8EmOLwYr0EtQ6g9IZq5m7_4RJTO',
-  secretKey: '-I8Wz35cDM0A-2FgFkDRgu1P7KBV-Hlfh7hTSc0Z',
-  bucket: 'nx-workspace-jh',
-  domain: 'sk53vfyiw.hd-bkt.clouddn.com',
-  zone: 'z0',
-  private: true
+export default createCustomRunner<QiniuBlobRunnerOptions>(async (options) => {
+  // initialize environment variables from dotfile
+  initEnv(options)
+  const clientOptions = getOptions(options)
+
+  const dir = (await pkgDir()) || ''
+  const cacheDir = join(dir, 'node_modules', '.cache', '.nx-remotecache-qiniu')
+  await storage.init({ dir: cacheDir })
+  return {
+    // name is used for logging purposes
+    name: 'Nx Qiniu Cloud Storage - nx-remotecache-qiniu plugin',
+
+    // fileExists checks whether a file exists on your remote storage
+    fileExists: async (filename) => {
+      const { bucketManager } = await getClient(clientOptions)
+      const exist = await new Promise((resolve) => {
+        bucketManager.stat(clientOptions.bucket, filename, function (err, _respBody, respInfo) {
+          // console.log({err, _respBody, respInfo});
+          if (err) {
+            // console.log(err);
+            throw err
+          } else {
+            if (respInfo.statusCode == 200) {
+              resolve(true)
+            } else {
+              resolve(false)
+            }
+          }
+        })
+      })
+      // console.log('exist', exist)
+      return exist
+    },
+
+    // retrieveFile downloads a file from your remote storage
+    retrieveFile: async (filename) => {
+      const { bucketManager } = await getClient(clientOptions)
+      const domain = clientOptions.domain
+      let fileUrl = ''
+      let res
+      const privateFunc = () => {
+        const deadline = Math.floor(Date.now() / 1000 + 3600) // 1小时过期
+        fileUrl = bucketManager.privateDownloadUrl(domain, filename, deadline)
+      }
+      if (!options.private) {
+        // public bucket
+        // 公开空间访问链接
+        fileUrl = bucketManager.publicDownloadUrl(domain, filename)
+        res = await fetch(fileUrl).catch(() => {
+          privateFunc()
+        })
+        if (res.status !== 200) {
+          privateFunc()
+        }
+      } else {
+        privateFunc()
+      }
+      res = await fetch(fileUrl)
+      return res.body!
+    },
+
+    // storeFile uploads a file from a buffer to your remote storage
+    storeFile: async (filename, buffer) => {
+      const { formUploader, uploadToken } = await getClient(clientOptions)
+      const putExtra = new qiniu.form_up.PutExtra()
+      // 文件上传
+      return new Promise((resolve) => {
+        formUploader.putStream(
+          uploadToken,
+          filename,
+          buffer,
+          putExtra,
+          function (respErr, respBody, respInfo) {
+            // console.log({respErr, respBody, respInfo});
+            if (respErr) {
+              throw respErr
+            }
+            // if (respInfo.statusCode == 200) {
+            //   console.log(respBody)
+            // } else {
+            //   console.log(respInfo.statusCode)
+            //   console.log(respBody)
+            // }
+            resolve({ respBody, respInfo })
+          }
+        )
+      })
+    }
+  } as RemoteCacheImplementation
 })
-// const { bucketManager } = await getClient(clientOptions)
-
-const filename = '18401171567754400428.tar.gz'
-const config = new qiniu.conf.Config()
-const accessKey = '4rJWJuLtG6_zb8EmOLwYr0EtQ6g9IZq5m7_4RJTO'
-const secretKey = '-I8Wz35cDM0A-2FgFkDRgu1P7KBV-Hlfh7hTSc0Z'
-const mac = new qiniu.auth.digest.Mac(accessKey, secretKey)
-const bucketManager = new qiniu.rs.BucketManager(mac, config)
-const privateBucketDomain = 'sk53vfyiw.hd-bkt.clouddn.com'
-const deadline = Math.floor(Date.now() / 1000) + 3600 // 1小时过期
-const privateDownloadUrl = bucketManager.privateDownloadUrl(privateBucketDomain, filename, deadline)
-console.log(privateDownloadUrl)
-
-// export default createCustomRunner<QiniuBlobRunnerOptions>(async (options) => {
-//   // initialize environment variables from dotfile
-//   initEnv(options)
-//   const clientOptions = getOptions(options)
-
-//   const dir = (await pkgDir()) || ''
-//   const cacheDir = join(dir, 'node_modules', '.cache', '.nx-remotecache-qiniu')
-//   await storage.init({ dir: cacheDir })
-//   return {
-//     // name is used for logging purposes
-//     name: 'Nx Qiniu Cloud Storage - nx-remotecache-qiniu plugin',
-
-//     // fileExists checks whether a file exists on your remote storage
-//     fileExists: async (filename) => {
-//       const { bucketManager } = await getClient(clientOptions)
-//       const exist = await new Promise((resolve) => {
-//         bucketManager.stat(clientOptions.bucket, filename, function (err, _respBody, respInfo) {
-//           // console.log({err, _respBody, respInfo});
-//           if (err) {
-//             // console.log(err);
-//             throw err
-//           } else {
-//             if (respInfo.statusCode == 200) {
-//               resolve(true)
-//             } else {
-//               resolve(false)
-//             }
-//           }
-//         })
-//       })
-//       // console.log('exist', exist)
-//       return exist
-//     },
-
-//     // retrieveFile downloads a file from your remote storage
-//     retrieveFile: async (filename) => {
-//       // const { bucketManager } = await getClient(clientOptions)
-//       const accessKey = '4rJWJuLtG6_zb8EmOLwYr0EtQ6g9IZq5m7_4RJTO'
-//       const secretKey = '-I8Wz35cDM0A-2FgFkDRgu1P7KBV-Hlfh7hTSc0Z'
-//       const privateBucketDomain = 'sk53vfyiw.hd-bkt.clouddn.com'
-//       const mac = new qiniu.auth.digest.Mac(accessKey, secretKey)
-//       const domain = clientOptions.domain
-//       let fileUrl = ''
-//       let res
-//       const privateFunc = () => {
-//         const deadline = Math.floor(Date.now() / 1000) + 3600 // 1小时过期
-//         const config = new qiniu.conf.Config()
-//         const bucketManager = new qiniu.rs.BucketManager(mac, config)
-//         const fileUrl = bucketManager.privateDownloadUrl(privateBucketDomain, filename, deadline)
-//         // fileUrl = bucketManager.privateDownloadUrl(domain, filename, deadline)
-//         console.log('fileUrl', fileUrl)
-//       }
-//       if (!options.private) {
-//         // public bucket
-//         // 公开空间访问链接
-//         // fileUrl = bucketManager.publicDownloadUrl(domain, filename)
-//         res = await fetch(fileUrl).catch(() => {
-//           privateFunc()
-//         })
-//         if (res.status !== 200) {
-//           privateFunc()
-//         }
-//       } else {
-//         privateFunc()
-//       }
-//       res = await fetch(fileUrl)
-//       return res.body!
-//     },
-
-//     // storeFile uploads a file from a buffer to your remote storage
-//     storeFile: async (filename, buffer) => {
-//       const { formUploader, uploadToken } = await getClient(clientOptions)
-//       const putExtra = new qiniu.form_up.PutExtra()
-//       // 文件上传
-//       return new Promise((resolve) => {
-//         formUploader.putStream(
-//           uploadToken,
-//           filename,
-//           buffer,
-//           putExtra,
-//           function (respErr, respBody, respInfo) {
-//             // console.log({respErr, respBody, respInfo});
-//             if (respErr) {
-//               throw respErr
-//             }
-//             // if (respInfo.statusCode == 200) {
-//             //   console.log(respBody)
-//             // } else {
-//             //   console.log(respInfo.statusCode)
-//             //   console.log(respBody)
-//             // }
-//             resolve({ respBody, respInfo })
-//           }
-//         )
-//       })
-//     }
-//   } as RemoteCacheImplementation
-// })

@@ -18,8 +18,7 @@ This package was built with [nx-remotecache-custom](https://www.npmjs.com/packag
 
 | Nx        | Remote Cache |
 | --------- | ------------ |
-| >= 17.0.0 <18 | >= 1.0.0     |
-| >= 18.0.0 < 19| >= 2.0.0     |
+| >= 17.0.0 | >= 1.0.0     |
 
 ## Installation
 
@@ -64,15 +63,15 @@ npm install --save-dev nx-remotecache-qiniu
 
 The `nx-remotecache-qiniu` requires the following options to be set:
 
-| Parameter | Description                        | Environment Variable | `nx.json`   | Notes                                                        |
-| --------- | ---------------------------------- | -------------------- | ----------- | ------------------------------------------------------------ |
-| accessKey | Qiniu Cloud accessKey              | `NXCACHE_ACCESS_KEY` | `accessKey` | Obtain from the Qiniu Cloud management console               |
-| secretKey | Qiniu Cloud secretKey              | `NXCACHE_SECRET_KEY` | `secretKey` | Obtain from the Qiniu Cloud management console               |
-| bucket    | Storage Bucket                     | `NXCACHE_BUCKET`     | `bucket`    |                                                              |
-| domain    | Access Domain                      | `NXCACHE_DOMAIN`     | `domain`    | CDN acceleration is recommended                              |
-| zone      | Zone                               | `NXCACHE_ZONE`       | `zone`      | Corresponds to the lowercase ZoneID                          |
-| private   | Private Bucket Option (true/false) | `NXCACHE_PRIVATE`    | `private`   | Default is false, optional attribute                         |
-| expires   | Cache Expiration Time (in seconds) | `NXCACHE_EXPIRES`    | `expires`   | Default is 3600, set to 0 for updating the uploadToken always |
+| Parameter | Description                        | Environment Variable | `nx.json`   |
+| --------- | ---------------------------------- | -------------------- | ----------- |
+| accessKey | Qiniu Cloud accessKey              | `NXCACHE_ACCESS_KEY` | `accessKey` |
+| secretKey | Qiniu Cloud secretKey              | `NXCACHE_SECRET_KEY` | `secretKey` |
+| bucket    | Storage Bucket                     | `NXCACHE_BUCKET`     | `bucket`    |
+| domain    | Access Domain                      | `NXCACHE_DOMAIN`     | `domain`    |
+| zone      | Zone                               | `NXCACHE_ZONE`       | `zone`      |
+| private   | Private Bucket Option (true/false) | `NXCACHE_PRIVATE`    | `private`   |
+| expires   | Cache Expiration Time (in seconds) | `NXCACHE_EXPIRES`    | `expires`   |
 
 ---
 
